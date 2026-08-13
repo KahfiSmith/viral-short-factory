@@ -37,10 +37,11 @@ Supported search fields include query, orientation, size, locale, page, and per_
 Documentation:
 https://pixabay.com/api/docs/
 
-Current video endpoint:
+Current Pixabay endpoints:
 
 ```text
-GET https://pixabay.com/api/videos/
+GET https://pixabay.com/api/          # images
+GET https://pixabay.com/api/videos/   # videos
 ```
 
 Important current documentation notes include:

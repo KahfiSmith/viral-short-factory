@@ -196,7 +196,7 @@ The `[WARN]` lines mean the network providers are unavailable; the pipeline
 still runs using only the local asset library. Set `PEXELS_API_KEY` /
 `PIXABAY_API_KEY` in the environment to enable those providers.
 
-### 10.2 All-in-one generate (create → plan → collect 8v+3i assets)
+### 10.2 All-in-one generate (create → plan → collect 8v+4i assets)
 
 ```bash
 vsf generate --topic "<YOUR_TOPIC>" --profile facts
@@ -208,7 +208,7 @@ Or with a custom `script.json`:
 vsf generate --topic "<YOUR_TOPIC>" --profile facts --script /path/to/script.json
 ```
 
-Creates the project workspace, generates/loads the script, plans 8 video + 3 photo search queries per scene, and downloads all collected media into `<workspace>/assets/`.
+Creates the project workspace, generates/loads the script, plans 8 video + 4 photo search queries per scene, and downloads all collected media into `<workspace>/assets/`.
 
 ### 10.3 Create a project
 

@@ -140,7 +140,7 @@ Detailed usage is in `docs/09-COMMANDCODE-WORKFLOW.md`.
 
 ### Quick Start (All-in-One Asset Collector)
 
-To generate a project workspace and collect 8 video + 3 photo assets per scene in one step:
+To generate a project workspace and collect 8 video + 4 photo assets per scene in one step:
 
 ```bash
 uv run vsf generate --topic "<YOUR_TOPIC>" --profile facts

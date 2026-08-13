@@ -101,38 +101,32 @@ per_page=20
 
 Priority: **3**
 
-Use official video endpoint:
+Use the official endpoints:
 
 ```text
-GET https://pixabay.com/api/videos/
+GET https://pixabay.com/api/          # images
+GET https://pixabay.com/api/videos/   # videos
 ```
 
-Parameters can include:
+Common parameters can include:
 
 ```text
 key
 q
 lang
-video_type
-category
-min_width
-min_height
-editors_choice
 safesearch
 order
 page
 per_page
 ```
 
-Recommended:
+Video searches additionally use:
 
 ```text
-category=sports
-safesearch=true
-order=popular
+video_type=film
 ```
 
-when compatible with the scene.
+Do not apply the unrelated `category=sports` filter to general footage searches.
 
 ## Mandatory cache behavior
 
@@ -147,8 +141,10 @@ provider + endpoint + normalized query parameters
 Example:
 
 ```text
-sha256("pixabay|videos|q=goalkeeper&category=sports&...")
+sha256("pixabay|/api/videos/|q=goalkeeper&per_page=8&video_type=film&...")
 ```
+
+The image endpoint uses `/api/` in the key, so image and video responses cannot collide.
 
 Store:
 
