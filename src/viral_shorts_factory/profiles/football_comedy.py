@@ -75,12 +75,11 @@ def generate_queries(purpose: BeatType, visual_intent: str) -> list[str]:
     return queries[:3]
 
 
-def build_storyboard_from_script(script: Script, profile: ProfileConfig) -> Storyboard:
-    """Convert a validated script into a storyboard deterministically.
-
-    One scene per beat, sequential orders, portrait constraints from the
-    profile, and generated query variants.
-    """
+def build_storyboard_from_script(
+    script: Script, profile: ProfileConfig, topic: str = ""
+) -> Storyboard:
+    """Convert a validated script into a storyboard deterministically."""
+    del topic  # Football visuals are profile-defined, not topic-defined.
     scenes: list[Scene] = []
     for index, beat in enumerate(script.beats, start=1):
         visual = _DEFAULT_VISUAL.get(beat.type.value, beat.text)

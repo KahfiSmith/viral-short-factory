@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 # Map profile name -> deterministic storyboard builder (docs/05 M6). Each module
 # in profiles/ that defines build_storyboard_from_script registers here.
-StoryboardBuilder = Callable[["Script", ProfileConfig], "Storyboard"]
+StoryboardBuilder = Callable[["Script", ProfileConfig, str], "Storyboard"]
 ScriptBuilder = Callable[[str, float], "Script"]
 _BUILDERS: dict[str, StoryboardBuilder] = {}
 _SCRIPT_BUILDERS: dict[str, ScriptBuilder] = {}

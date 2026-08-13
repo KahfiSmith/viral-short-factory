@@ -7,36 +7,64 @@ script fixture when the agent has not written one yet.
 
 from __future__ import annotations
 
+import re
+
 from viral_shorts_factory.config.models import ProfileConfig
 from viral_shorts_factory.domain.script import Beat, BeatType, Script
 from viral_shorts_factory.domain.storyboard import Scene, SceneConstraints, Storyboard
 from viral_shorts_factory.profiles.base import register_profile
 
+
 def _extract_english_topic(topic: str) -> str:
     """Extract stock-friendly English search terms from topic string."""
     t = topic.lower()
-    if "cupang" in t or "betta" in t:
+    if "cupang" in t or re.search(r"\b(?:beta|betta)(?:\s+fish)?\b", t):
         return "betta fish"
-    if "kucing" in t or "cat" in t:
+    if "ikan badut" in t or re.search(r"\bclown\s*fish\b", t) or "nemo" in t:
+        return "clownfish"
+    if re.search(r"\bsinga\s+laut\b", t) or re.search(r"\bsea\s+lion\b", t):
+        return "sea lion"
+    if re.search(r"\bsinga\b", t) or re.search(r"\blions?\b", t):
+        return "lion"
+    if "kucing" in t or re.search(r"\bcat\b", t):
         return "cute cat"
-    if "anjing" in t or "dog" in t:
+    if "anjing" in t or re.search(r"\bdog\b", t):
         return "dog pet"
     return topic
 
 
 def generate_queries(purpose: BeatType, visual_intent: str, topic_term: str) -> list[str]:
-    """Generate up to 3 query variants dynamically for a facts scene."""
+    """Generate up to 3 topic-focused query variants for a facts scene."""
+    if topic_term == "betta fish":
+        return [
+            visual_intent,
+            "betta splendens aquarium close up",
+            "Siamese fighting fish swimming aquarium",
+        ]
+    if topic_term == "clownfish":
+        return [
+            visual_intent,
+            "clownfish swimming around sea anemone",
+            "ocellaris clownfish coral reef close up",
+        ]
+    if topic_term == "lion":
+        return [
+            visual_intent,
+            "lion pride savanna close up",
+            "lion walking grassland wildlife video",
+        ]
+
     suffix_map = {
-        BeatType.HOOK.value: ["macro close up", "swimming underwater", "beautiful colors"],
-        BeatType.SETUP.value: ["underwater macro", "aquarium tank", "swimming close up"],
-        BeatType.PAYOFF.value: ["behavior close up", "macro detail", "underwater shot"],
-        BeatType.ESCALATION.value: ["action swimming", "fast movement", "macro high quality"],
-        BeatType.CTA.value: ["peaceful aquarium", "aesthetic cinematic", "floating water"],
+        BeatType.HOOK.value: ["close up natural habitat", "wildlife macro"],
+        BeatType.SETUP.value: ["natural habitat close up", "wildlife details"],
+        BeatType.PAYOFF.value: ["behavior close up", "wildlife macro"],
+        BeatType.ESCALATION.value: ["action in natural habitat", "wildlife close up"],
+        BeatType.CTA.value: ["peaceful natural habitat", "aesthetic wildlife"],
     }
-    suffixes = suffix_map.get(purpose.value, ["underwater", "close up", "aquarium"])
+    suffixes = suffix_map.get(purpose.value, ["natural habitat", "close up"])
     queries = [visual_intent]
-    for s in suffixes:
-        q = f"{topic_term} {s}"
+    for suffix in suffixes:
+        q = f"{topic_term} {suffix}"
         if len(queries) >= 3:
             break
         if q not in queries:
@@ -44,13 +72,22 @@ def generate_queries(purpose: BeatType, visual_intent: str, topic_term: str) -> 
     return queries[:3]
 
 
-def build_storyboard_from_script(script: Script, profile: ProfileConfig, topic: str = "nature") -> Storyboard:
+def build_storyboard_from_script(
+    script: Script, profile: ProfileConfig, topic: str = "nature"
+) -> Storyboard:
     """Convert a validated script into a facts storyboard deterministically."""
     scenes: list[Scene] = []
     topic_term = _extract_english_topic(topic)
 
     for index, beat in enumerate(script.beats, start=1):
-        visual = f"{topic_term} {beat.type.value} macro underwater video"
+        if topic_term == "betta fish":
+            visual = "betta fish aquarium close up video"
+        elif topic_term == "clownfish":
+            visual = "clownfish sea anemone close up video"
+        elif topic_term == "lion":
+            visual = "lion close up savanna natural habitat video"
+        else:
+            visual = f"{topic_term} close up natural habitat video"
         scenes.append(
             Scene(
                 scene_id=f"scene_{index:03d}",
@@ -90,7 +127,8 @@ Write THREE validated JSON artifacts into the project workspace:
    (English, stock-footage-friendly), queries (3 English variants), constraints.
 
 Narration & Beat Structure Guidelines (CRITICAL):
-- Hook (hook): Mind-blowing opening contrast/paradox or dramatic statement to catch attention instantly.
+- Hook (hook): Mind-blowing opening contrast/paradox or dramatic statement to catch attention
+  instantly.
 - Setup (setup): Introduce the subject in detail with scale, context, or mind-boggling numbers.
 - Payoff/Surprise (payoff): Deliver the ironic or unexpected limitation/secret behind the subject.
 - Escalation/Twist (escalation): Explain the twist or adaptation resulting from that limitation.
@@ -112,31 +150,45 @@ def build_script_fixture(topic: str, target_duration_seconds: float) -> Script:
             Beat(
                 id="beat_001",
                 type=BeatType.HOOK,
-                text=f"Tahukah kamu fakta paling menakjubkan tentang {topic} yang jarang orang tahu?",
+                text=(
+                    f"Tahukah kamu fakta paling menakjubkan tentang {topic} yang jarang orang tahu?"
+                ),
                 estimated_seconds=target_duration_seconds * 0.18,
             ),
             Beat(
                 id="beat_002",
                 type=BeatType.SETUP,
-                text=f"{topic.capitalize()} memiliki keunikan luar biasa yang membuatnya sangat istimewa di alam liar.",
+                text=(
+                    f"{topic.capitalize()} memiliki keunikan luar biasa yang membuatnya sangat "
+                    "istimewa di alam liar."
+                ),
                 estimated_seconds=target_duration_seconds * 0.30,
             ),
             Beat(
                 id="beat_003",
                 type=BeatType.PAYOFF,
-                text=f"Tapi rahasia paling mengejutkan dari {topic} adalah kemampuan bertahan hidup dan perilakunya yang tidak terduga!",
+                text=(
+                    f"Tapi rahasia paling mengejutkan dari {topic} adalah kemampuan bertahan "
+                    "hidup dan perilakunya yang tidak terduga!"
+                ),
                 estimated_seconds=target_duration_seconds * 0.22,
             ),
             Beat(
                 id="beat_004",
                 type=BeatType.ESCALATION,
-                text=f"Plot twist-nya? Para peneliti menemukan fakta bahwa kebiasaan {topic} ini justru sangat membantu ekosistem sekitarnya.",
+                text=(
+                    f"Plot twist-nya? Para peneliti menemukan fakta bahwa kebiasaan {topic} ini "
+                    "justru sangat membantu ekosistem sekitarnya."
+                ),
                 estimated_seconds=target_duration_seconds * 0.20,
             ),
             Beat(
                 id="beat_005",
                 type=BeatType.CTA,
-                text=f"Menurutmu, fakta mana dari {topic} yang paling bikin kamu terheran-heran? 💡✨",
+                text=(
+                    f"Menurutmu, fakta mana dari {topic} yang paling bikin kamu terheran-heran? "
+                    "💡✨"
+                ),
                 estimated_seconds=target_duration_seconds * 0.10,
             ),
         ],
