@@ -18,7 +18,7 @@ from viral_shorts_factory.assets.hashing import sha256_file
 from viral_shorts_factory.assets.library import AssetLibrary, local_first_search
 from viral_shorts_factory.assets.probe import probe_video
 from viral_shorts_factory.config.models import AppConfig
-from viral_shorts_factory.domain.assets import AssetCandidate, AssetSearchRequest
+from viral_shorts_factory.domain.assets import AssetCandidate, AssetSearchRequest, MediaType
 from viral_shorts_factory.domain.concept import Concept
 from viral_shorts_factory.domain.project import Project, ProjectWorkspace
 from viral_shorts_factory.domain.script import Script, script_from_json
@@ -49,9 +49,11 @@ async def _search_provider(
     found: dict[str, list[AssetCandidate]] = {}
     for request in requests:
         try:
-            found[request.scene_id] = await provider.search(request)
+            found.setdefault(request.scene_id, []).extend(await provider.search(request))
         except ProviderError as exc:
-            _log.warning("provider search failed for %s (%s): %s", provider.name, request.scene_id, exc)
+            _log.warning(
+                "provider search failed for %s (%s): %s", provider.name, request.scene_id, exc
+            )
             continue  # provider down / rate-limited: skip, other scenes still proceed
     return found
 
@@ -93,7 +95,9 @@ async def run_pipeline(
             library = AssetLibrary(conn, config)
             by_scene: dict[str, list[AssetCandidate]] = {}
             for request in requests:
-                by_scene[request.scene_id] = local_first_search(library, request)
+                by_scene.setdefault(request.scene_id, []).extend(
+                    local_first_search(library, request)
+                )
 
             provider_configs = []
             for name in ("pexels", "pixabay"):
@@ -123,35 +127,100 @@ async def run_pipeline(
             # 2) Rank per scene.
             ranked = select_best_candidates(by_scene, storyboard, config)
 
-            # 3) Materialize candidates per scene (download all discovered videos & photos).
+            # 3) Materialize unique candidates per scene (remote bytes are SHA-256 checked).
             downloader = Downloader(config)
             sources_dir = project_dir / "sources"
             assets_dir = project_dir / "assets"
             sources_dir.mkdir(parents=True, exist_ok=True)
             assets_dir.mkdir(parents=True, exist_ok=True)
             selected_assets: dict[str, tuple[AssetCandidate, CandidateScore]] = {}
+            selected_media_assets: dict[str, list[tuple[AssetCandidate, CandidateScore, str]]] = {}
+            selected_source_paths: dict[str, list[str] | str] = {}
             manifest_items: list[tuple[str, AssetCandidate, DownloadedAsset]] = []
+            materialized_by_candidate: dict[str, DownloadedAsset] = {}
+            materialized_by_sha256: dict[str, DownloadedAsset] = {}
+            selected_candidate_ids: set[str] = set()
+
+            # First reserve one video and one image per scene when available.
+            # If the best candidate is byte-identical to an earlier selection,
+            # try the next candidate of that media type before reusing it.
             for scene in storyboard.scenes:
                 ranked_list = ranked.get(scene.scene_id, [])
                 if not ranked_list:
                     continue
-                # Download top candidate for manifest
-                candidate, score = ranked_list[0]
-                selected_assets[scene.scene_id] = (candidate, score)
 
-                # Download top candidate to sources_dir (for backward compatibility & test expectations)
-                try:
-                    downloaded_source = _materialize_asset(
-                        candidate, scene.scene_id, sources_dir, downloader, library
+                selected_for_scene: list[tuple[AssetCandidate, CandidateScore, str]] = []
+                for media_type in (MediaType.VIDEO, MediaType.IMAGE):
+                    typed_candidates = [
+                        item for item in ranked_list if item[0].media_type == media_type
+                    ]
+                    fallback: tuple[AssetCandidate, CandidateScore, DownloadedAsset] | None = None
+                    for candidate, score in typed_candidates:
+                        before_sha256 = set(materialized_by_sha256)
+                        try:
+                            downloaded_source = _materialize_unique_asset(
+                                candidate,
+                                scene.scene_id,
+                                sources_dir,
+                                downloader,
+                                library,
+                                materialized_by_candidate,
+                                materialized_by_sha256,
+                            )
+                        except Exception as exc:
+                            _log.warning(
+                                f"failed downloading primary {media_type.value} "
+                                f"{candidate.candidate_id}: {exc}"
+                            )
+                            continue
+
+                        if fallback is None:
+                            fallback = (candidate, score, downloaded_source)
+                        if downloaded_source.sha256 not in before_sha256:
+                            fallback = (candidate, score, downloaded_source)
+                            break
+
+                    if fallback is not None:
+                        candidate, score, downloaded_source = fallback
+                        selected_for_scene.append(
+                            (
+                                candidate,
+                                score,
+                                _project_relative_path(downloaded_source.local_path, project_dir),
+                            )
+                        )
+                        selected_candidate_ids.add(candidate.candidate_id)
+                        manifest_items.append((scene.scene_id, candidate, downloaded_source))
+
+                if selected_for_scene:
+                    selected_media_assets[scene.scene_id] = selected_for_scene
+                    selected_source_paths[scene.scene_id] = [item[2] for item in selected_for_scene]
+                    primary = next(
+                        (
+                            item
+                            for item in selected_for_scene
+                            if item[0].media_type == MediaType.VIDEO
+                        ),
+                        selected_for_scene[0],
                     )
-                    manifest_items.append((scene.scene_id, candidate, downloaded_source))
-                except Exception as exc:
-                    _log.warning(f"failed downloading primary source {candidate.candidate_id}: {exc}")
+                    selected_assets[scene.scene_id] = (primary[0], primary[1])
 
-                # Download all ranked candidates to project assets folder
-                for cand, _ in ranked_list:
+            # Then materialize remaining ranked alternatives. Primary sources
+            # are skipped because they already have canonical files in sources/.
+            for scene in storyboard.scenes:
+                for cand, _ in ranked.get(scene.scene_id, [])[1:]:
+                    if cand.candidate_id in selected_candidate_ids:
+                        continue
                     try:
-                        _materialize_asset(cand, scene.scene_id, assets_dir, downloader, library)
+                        _materialize_unique_asset(
+                            cand,
+                            scene.scene_id,
+                            assets_dir,
+                            downloader,
+                            library,
+                            materialized_by_candidate,
+                            materialized_by_sha256,
+                        )
                     except Exception as exc:
                         _log.warning(f"failed downloading asset {cand.candidate_id}: {exc}")
 
@@ -159,7 +228,14 @@ async def run_pipeline(
             manifest = build_manifest(project.project_id, manifest_items)
             (project_dir / "source_manifest.json").write_text(manifest.to_json(), encoding="utf-8")
             brief = generate_edit_brief(
-                project, concept, script, storyboard, selected_assets, config
+                project,
+                concept,
+                script,
+                storyboard,
+                selected_assets,
+                config,
+                selected_source_paths=selected_source_paths,
+                selected_media_assets=selected_media_assets,
             )
             write_edit_brief(brief, project_dir / "edit_brief.md")
 
@@ -191,6 +267,50 @@ async def run_pipeline(
     finally:
         if own_conn:
             conn.close()
+
+
+def _project_relative_path(path: str, project_dir: Path) -> str:
+    """Return a manifest/edit-brief path relative to the project workspace."""
+    candidate_path = Path(path)
+    try:
+        return candidate_path.relative_to(project_dir).as_posix()
+    except ValueError:
+        return str(candidate_path)
+
+
+def _materialize_unique_asset(
+    candidate: AssetCandidate,
+    scene_id: str,
+    destination_dir: Path,
+    downloader: Downloader,
+    library: AssetLibrary,
+    by_candidate: dict[str, DownloadedAsset],
+    by_sha256: dict[str, DownloadedAsset],
+) -> DownloadedAsset:
+    """Materialize once per candidate and once per file checksum per run.
+
+    Provider IDs are not a safe cross-provider identity. The downloaded bytes
+    are therefore hashed before deciding whether a newly materialized file is
+    a duplicate. The first path remains canonical; later duplicate files are
+    removed and the canonical record is reused.
+    """
+    cached = by_candidate.get(candidate.candidate_id)
+    if cached is not None:
+        return cached
+
+    downloaded = _materialize_asset(candidate, scene_id, destination_dir, downloader, library)
+    by_candidate[candidate.candidate_id] = downloaded
+
+    canonical = by_sha256.get(downloaded.sha256)
+    if canonical is not None:
+        duplicate_path = Path(downloaded.local_path)
+        canonical_path = Path(canonical.local_path)
+        if duplicate_path != canonical_path:
+            duplicate_path.unlink(missing_ok=True)
+        return canonical
+
+    by_sha256[downloaded.sha256] = downloaded
+    return downloaded
 
 
 def _materialize_asset(

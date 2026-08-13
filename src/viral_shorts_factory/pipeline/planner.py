@@ -22,18 +22,18 @@ def plan_queries(
 
     Emits two requests per scene:
     1. Video request (target 8 videos)
-    2. Image request (target 3 images)
+    2. Image request (target 4 images)
     """
     from viral_shorts_factory.domain.assets import MediaType
 
+    del config  # Reserved for provider/profile-specific query options.
     requests: list[AssetSearchRequest] = []
     for scene in storyboard.scenes:
         constraints = scene.constraints
-        orientation = (
-            "portrait"
-            if "portrait" in constraints.orientation
-            else constraints.orientation
-        )
+        if "portrait" in constraints.orientation:
+            orientation = "portrait"
+        else:
+            orientation = constraints.orientation
         # Request 8 videos per scene
         requests.append(
             AssetSearchRequest(
@@ -46,7 +46,7 @@ def plan_queries(
                 max_results=8,
             )
         )
-        # Request 3 images per scene
+        # Request 4 images per scene
         requests.append(
             AssetSearchRequest(
                 scene_id=scene.scene_id,
@@ -55,7 +55,7 @@ def plan_queries(
                 locale="en-US",
                 orientation=orientation,
                 minimum_height=constraints.min_height,
-                max_results=3,
+                max_results=4,
             )
         )
     if context is not None:

@@ -14,9 +14,10 @@ from pydantic import BaseModel, Field
 from viral_shorts_factory.assets.hashing import sha256_file
 from viral_shorts_factory.assets.probe import ProbeError, ProbeResult, probe_video
 from viral_shorts_factory.config.models import AppConfig, DownloadLimits
-from viral_shorts_factory.domain.assets import AssetCandidate, RightsStatus
+from viral_shorts_factory.domain.assets import AssetCandidate, MediaType, RightsStatus
 
 SCHEMA_VERSION = "1.0"
+_IMAGE_CODECS = frozenset({"bmp", "gif", "jpeg2000", "jpegls", "mjpeg", "png", "tiff", "webp"})
 
 
 class DownloadError(Exception):
@@ -45,6 +46,7 @@ class ManifestItem(BaseModel):
     asset_id: str
     provider: str
     provider_asset_id: str
+    media_type: MediaType = MediaType.VIDEO
     source_page_url: str | None = None
     contributor_name: str | None = None
     query: str
@@ -97,13 +99,16 @@ class Downloader:
             raise DownloadError(f"download URL must be HTTPS: {url}")
 
         destination_dir.mkdir(parents=True, exist_ok=True)
-        is_image = candidate.media_type == MediaType.IMAGE or "image" in variant.file_type
+        is_image = candidate.media_type == MediaType.IMAGE or variant.file_type.lower().startswith(
+            "image/"
+        )
         ext = ".jpg" if is_image else ".mp4"
         filename = f"{scene_id}_{candidate.provider}_{candidate.provider_asset_id}{ext}"
         target_path = destination_dir / filename
 
         max_bytes = self.limits.max_file_size_mb * 1024 * 1024
 
+        close_client = self._client is None
         client = self._client or httpx.Client(timeout=float(self.limits.timeout_seconds))
 
         try:
@@ -112,14 +117,13 @@ class Downloader:
                     raise DownloadError(
                         f"download failed with status {response.status_code} for {url}"
                     )
-                content_type = response.headers.get("content-type", "")
-                if (
-                    content_type
-                    and "video" not in content_type
-                    and "image" not in content_type
-                    and "octet-stream" not in content_type
-                ):
-                    raise DownloadError(f"invalid content-type: {content_type}")
+                content_type = response.headers.get("content-type", "").split(";", 1)[0].lower()
+                if content_type and content_type != "application/octet-stream":
+                    expected_prefix = "image/" if is_image else "video/"
+                    if not content_type.startswith(expected_prefix):
+                        raise DownloadError(
+                            f"invalid content-type for {candidate.media_type}: {content_type}"
+                        )
 
                 content_length = response.headers.get("content-length")
                 if content_length and int(content_length) > max_bytes:
@@ -151,22 +155,26 @@ class Downloader:
 
         sha256 = sha256_file(target_path)
 
+        try:
+            probe_result = probe_video(target_path)
+        except ProbeError as exc:
+            target_path.unlink(missing_ok=True)
+            raise DownloadError(f"downloaded file failed media validation: {exc}") from exc
+
         if is_image:
-            from viral_shorts_factory.assets.probe import VideoProbe
-            probe_result = VideoProbe(
-                format_name="image",
-                duration_seconds=0.0,
-                width=variant.width,
-                height=variant.height,
-                codec_name="image",
-                r_frame_rate="0/0",
-            )
-        else:
-            try:
-                probe_result = probe_video(target_path)
-            except ProbeError as exc:
+            if probe_result.video_codec.lower() not in _IMAGE_CODECS:
                 target_path.unlink(missing_ok=True)
-                raise DownloadError(f"downloaded file failed ffprobe validation: {exc}") from exc
+                raise DownloadError(
+                    f"downloaded file is not a supported image: {probe_result.video_codec}"
+                )
+            probe_result = ProbeResult(
+                duration_seconds=0.0,
+                width=probe_result.width,
+                height=probe_result.height,
+                fps=0.0,
+                video_codec=probe_result.video_codec,
+                has_audio=False,
+            )
 
         asset_id = f"asset_{secrets.token_hex(8)}"
         return DownloadedAsset(
@@ -194,6 +202,7 @@ def build_manifest(
                 asset_id=dl.asset_id,
                 provider=cand.provider,
                 provider_asset_id=cand.provider_asset_id,
+                media_type=cand.media_type,
                 source_page_url=cand.source_page_url,
                 contributor_name=cand.contributor_name,
                 query=cand.query,

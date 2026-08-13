@@ -36,8 +36,9 @@ def _slugify(topic: str) -> str:
 
 
 def generate_project_id(topic: str, now: datetime | None = None) -> str:
-    """Generate a clean project id directly from topic (e.g. 'betta fish' -> 'betta-fish')."""
-    return _slugify(topic)
+    """Generate a topic slug with an 8-character suffix for uniqueness."""
+    del now  # Kept for API compatibility with callers that provide a fixed timestamp.
+    return f"{_slugify(topic)}-{secrets.token_hex(4)}"
 
 
 class Project(BaseModel):

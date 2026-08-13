@@ -260,7 +260,7 @@ def generate(
     script_path: str | None = typer.Option(None, "--script", help="Path to custom script.json"),
     config_path: str | None = typer.Option(None, "--config", help="Path to config YAML"),
 ) -> None:
-    """All-in-one command: create project, plan queries (8v+3i), & download assets."""
+    """All-in-one command: create project, plan queries (8v+4i), & download assets."""
     import json
 
     from viral_shorts_factory.domain.script import script_from_json, script_to_json
@@ -342,8 +342,9 @@ def generate(
         conn.close()
 
     # Step 2: Download media assets
-    from viral_shorts_factory.pipeline.runner import run_pipeline
     import asyncio
+
+    from viral_shorts_factory.pipeline.runner import run_pipeline
 
     try:
         proj, pdir, msg = asyncio.run(run_pipeline(project_id, config))
@@ -408,7 +409,7 @@ def plan(
     else:
         _fail(f"no script found and profile {project.profile!r} has no script fixture")
 
-    storyboard = builder(script, profile_config)
+    storyboard = builder(script, profile_config, project.topic)
     try:
         validate_storyboard(storyboard, profile_config)
         validate_storyboard_target(storyboard, float(script.target_duration_seconds))
