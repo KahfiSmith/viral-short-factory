@@ -56,7 +56,12 @@ def config_yaml(tmp_path: Path) -> Path:
                 "min_duration_seconds": 18,
                 "max_duration_seconds": 35,
                 "locale": "id-ID",
-            }
+            },
+            "facts": {
+                "min_duration_seconds": 18,
+                "max_duration_seconds": 35,
+                "locale": "id-ID",
+            },
         },
     }
     path = tmp_path / "config.yaml"
@@ -299,6 +304,42 @@ def test_plan_builds_storyboard_and_queries(config_yaml: Path) -> None:
 
     raw = _json.loads((project_dir / "project.json").read_text(encoding="utf-8"))
     assert raw["status"] == "ASSET_QUERIES_READY"
+
+
+def test_plan_preserves_topic_in_provider_queries(config_yaml: Path) -> None:
+    import json
+
+    new_result = runner.invoke(
+        app,
+        [
+            "new",
+            "--profile",
+            "facts",
+            "--topic",
+            "ikan badut",
+            "--config",
+            str(config_yaml),
+        ],
+    )
+    assert new_result.exit_code == 0, new_result.output
+    project_id = next(
+        line.split()[2] for line in new_result.output.splitlines() if line.startswith("created")
+    )
+
+    result = runner.invoke(app, ["plan", project_id, "--config", str(config_yaml)])
+    assert result.exit_code == 0, result.output
+
+    config = load_config(config_yaml)
+    project_dir = ProjectWorkspace(config).load(project_id)[1]
+    queries = json.loads((project_dir / "asset_queries.json").read_text(encoding="utf-8"))
+    assert queries
+    assert all(
+        "clownfish" in query["query"]
+        or "anemone" in query["query"]
+        or "ocellaris" in query["query"]
+        for query in queries
+    )
+    assert all("nature" not in query["query"] for query in queries)
 
 
 def test_plan_with_custom_script(config_yaml: Path, tmp_path: Path) -> None:

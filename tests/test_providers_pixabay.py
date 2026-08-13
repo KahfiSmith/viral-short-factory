@@ -10,7 +10,7 @@ import httpx
 import pytest
 
 from viral_shorts_factory.config.models import AppConfig
-from viral_shorts_factory.domain.assets import AssetSearchRequest, RightsStatus
+from viral_shorts_factory.domain.assets import AssetSearchRequest, MediaType, RightsStatus
 from viral_shorts_factory.persistence.repositories import CacheRepository, DatabaseConnection
 from viral_shorts_factory.providers.base import (
     ProviderAuthError,
@@ -113,6 +113,7 @@ def test_key_and_query_params(config: AppConfig, tmp_path: Path) -> None:
     captured: dict = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
         captured["params"] = dict(request.url.params)
         return httpx.Response(200, json=_search_response(_video(111)))
 
@@ -123,8 +124,9 @@ def test_key_and_query_params(config: AppConfig, tmp_path: Path) -> None:
     assert captured["params"]["q"] == "goalkeeper confident"
     assert captured["params"]["safesearch"] == "true"
     assert captured["params"]["order"] == "popular"
-    assert captured["params"]["category"] == "sports"
+    assert "category" not in captured["params"]
     assert captured["params"]["lang"] == "en-US"
+    assert captured["path"] == "/api/videos/"
 
 
 def test_minimum_height_filtered(config: AppConfig, tmp_path: Path) -> None:
@@ -140,6 +142,72 @@ def test_minimum_height_filtered(config: AppConfig, tmp_path: Path) -> None:
     provider, _ = _provider(handler, config)
     candidates = run(provider.search(_request()))
     assert [c.provider_asset_id for c in candidates] == ["111"]
+
+
+def test_current_video_payload_without_legacy_fields_is_supported(
+    config: AppConfig, tmp_path: Path
+) -> None:
+    raw_video = _video(444)
+    raw_video.pop("image")
+    raw_video["videos"] = {
+        quality: {key: value for key, value in variant.items() if key != "type"}
+        for quality, variant in raw_video["videos"].items()
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=_search_response(raw_video))
+
+    provider, _ = _provider(handler, config)
+    candidates = run(provider.search(_request()))
+
+    assert len(candidates) == 1
+    assert candidates[0].preview_url is None
+    assert candidates[0].download_variants[0].file_type == "video/mp4"
+
+
+def test_image_search_preserves_tags_without_sports_filter(
+    config: AppConfig, tmp_path: Path
+) -> None:
+    captured: dict = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        captured["params"] = dict(request.url.params)
+        return httpx.Response(
+            200,
+            json={
+                "total": 1,
+                "totalHits": 1,
+                "hits": [
+                    {
+                        "id": 777,
+                        "pageURL": "https://pixabay.com/photos/betta-fish-777/",
+                        "largeImageURL": "https://pixabay.com/images/777.jpg",
+                        "webformatURL": "https://pixabay.com/images/777-small.jpg",
+                        "previewURL": "https://pixabay.com/images/777-preview.jpg",
+                        "imageWidth": 1080,
+                        "imageHeight": 1920,
+                        "user": "Photo Tester",
+                        "tags": "betta, fish, aquarium",
+                    }
+                ],
+            },
+        )
+
+    provider, _ = _provider(handler, config)
+    request = AssetSearchRequest(
+        scene_id="scene_001",
+        query="betta fish aquarium",
+        media_type=MediaType.IMAGE,
+        minimum_height=1080,
+    )
+    candidates = run(provider.search(request))
+
+    assert len(candidates) == 1
+    assert candidates[0].media_type == MediaType.IMAGE
+    assert candidates[0].tags == ["betta", "fish", "aquarium"]
+    assert "category" not in captured["params"]
+    assert captured["path"] == "/api/"
 
 
 def test_missing_mp4_variant_skipped(config: AppConfig, tmp_path: Path) -> None:

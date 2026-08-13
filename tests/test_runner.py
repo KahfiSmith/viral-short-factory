@@ -68,6 +68,38 @@ def _prepare_planned_project(config: AppConfig, video_fixture: Path, topic: str 
     return project.project_id
 
 
+def test_search_provider_accumulates_video_and_image_results() -> None:
+    from viral_shorts_factory.domain.assets import AssetCandidate, AssetSearchRequest, MediaType
+    from viral_shorts_factory.pipeline.runner import _search_provider
+
+    class FakeProvider:
+        name = "fake"
+
+        async def search(self, request: AssetSearchRequest) -> list[AssetCandidate]:
+            return [
+                AssetCandidate(
+                    candidate_id=f"fake:{request.media_type.value}",
+                    provider=self.name,
+                    provider_asset_id=request.media_type.value,
+                    media_type=request.media_type,
+                    query=request.query,
+                    rights_status=RightsStatus.PROVIDER_LICENSED,
+                )
+            ]
+
+    requests = [
+        AssetSearchRequest(scene_id="scene_001", query="betta fish", media_type=MediaType.VIDEO),
+        AssetSearchRequest(scene_id="scene_001", query="betta fish", media_type=MediaType.IMAGE),
+    ]
+
+    found = run(_search_provider(FakeProvider(), requests))
+
+    assert [candidate.media_type for candidate in found["scene_001"]] == [
+        MediaType.VIDEO,
+        MediaType.IMAGE,
+    ]
+
+
 def test_run_pipeline_reaches_approval_gate(config: AppConfig, video_fixture: Path):
     project_id = _prepare_planned_project(config, video_fixture)
     project, project_dir, message = run(run_pipeline(project_id, config))
@@ -90,6 +122,72 @@ def test_run_pipeline_reaches_approval_gate(config: AppConfig, video_fixture: Pa
     # Sources downloaded and probed.
     sources = list((project_dir / "sources").glob("*.*"))
     assert sources, "expected downloaded source files"
+
+
+def test_materialize_unique_asset_deduplicates_cross_provider_bytes(
+    config: AppConfig, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from viral_shorts_factory.assets.downloader import DownloadedAsset
+    from viral_shorts_factory.assets.probe import ProbeResult
+    from viral_shorts_factory.domain.assets import AssetCandidate
+    from viral_shorts_factory.pipeline import runner as pipeline_runner
+
+    calls: list[str] = []
+    first_path = tmp_path / "sources" / "scene_001_pexels_1.mp4"
+    second_path = tmp_path / "assets" / "scene_001_pixabay_2.mp4"
+    probe = ProbeResult(
+        duration_seconds=5.0,
+        width=1080,
+        height=1920,
+        fps=30.0,
+        video_codec="h264",
+        has_audio=False,
+    )
+
+    def fake_materialize(candidate, _scene_id, destination_dir, _downloader, _library):
+        calls.append(candidate.candidate_id)
+        destination_dir.mkdir(parents=True, exist_ok=True)
+        path = first_path if candidate.provider == "pexels" else second_path
+        path.write_bytes(b"same video bytes")
+        return DownloadedAsset(
+            asset_id=f"asset_{candidate.provider}",
+            candidate_id=candidate.candidate_id,
+            local_path=str(path),
+            sha256="same-sha256",
+            bytes=17,
+            probe=probe,
+        )
+
+    monkeypatch.setattr(pipeline_runner, "_materialize_asset", fake_materialize)
+    pexels = AssetCandidate(
+        candidate_id="pexels:1",
+        provider="pexels",
+        provider_asset_id="1",
+        query="fish",
+        rights_status="PROVIDER_LICENSED",
+    )
+    pixabay = AssetCandidate(
+        candidate_id="pixabay:2",
+        provider="pixabay",
+        provider_asset_id="2",
+        query="fish",
+        rights_status="PROVIDER_LICENSED",
+    )
+    by_candidate = {}
+    by_sha256 = {}
+
+    first = pipeline_runner._materialize_unique_asset(
+        pexels, "scene_001", first_path.parent, None, None, by_candidate, by_sha256
+    )
+    second = pipeline_runner._materialize_unique_asset(
+        pixabay, "scene_001", second_path.parent, None, None, by_candidate, by_sha256
+    )
+
+    assert calls == ["pexels:1", "pixabay:2"]
+    assert second.asset_id == first.asset_id
+    assert second.local_path == first.local_path
+    assert first_path.is_file()
+    assert not second_path.exists()
 
 
 def test_run_pipeline_requires_queries_ready(config: AppConfig, video_fixture: Path):

@@ -21,6 +21,14 @@ def test_facts_queries_are_nature_themed() -> None:
     assert all("betta" in q or "fish" in q for q in queries)
 
 
+def test_beta_fish_topic_normalizes_to_betta_queries() -> None:
+    script = build_script_fixture("beta fish", 28.0)
+    storyboard = build_storyboard_from_script(script, PROFILE, "beta fish")
+    assert all("betta fish" in scene.visual_intent for scene in storyboard.scenes)
+    assert all("beta fish" not in query for scene in storyboard.scenes for query in scene.queries)
+    assert all("hook" not in scene.queries[0] for scene in storyboard.scenes)
+
+
 def test_facts_storyboard_from_script() -> None:
     script = Script(
         schema_version="1.0",
@@ -62,3 +70,25 @@ def test_facts_script_fixture() -> None:
     assert len(script.beats) == 5
     assert script.beats[0].type == BeatType.HOOK
     assert "kucing orange" in script.beats[0].text
+
+
+def test_clownfish_topic_normalizes_to_species_specific_queries() -> None:
+    script = build_script_fixture("ikan badut", 28.0)
+    storyboard = build_storyboard_from_script(script, PROFILE, "ikan badut")
+
+    assert all("clownfish" in scene.visual_intent for scene in storyboard.scenes)
+    assert all("ikan badut" not in query for scene in storyboard.scenes for query in scene.queries)
+    assert all(
+        "clownfish" in query or "anemone" in query or "ocellaris" in query
+        for scene in storyboard.scenes
+        for query in scene.queries
+    )
+
+
+def test_lion_topic_normalizes_to_species_specific_queries() -> None:
+    script = build_script_fixture("singa", 28.0)
+    storyboard = build_storyboard_from_script(script, PROFILE, "singa")
+
+    assert all("lion" in scene.visual_intent for scene in storyboard.scenes)
+    assert all("singa" not in query for scene in storyboard.scenes for query in scene.queries)
+    assert all("lion" in query for scene in storyboard.scenes for query in scene.queries)

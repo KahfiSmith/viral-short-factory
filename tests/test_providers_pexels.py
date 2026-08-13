@@ -8,7 +8,7 @@ import httpx
 import pytest
 
 from viral_shorts_factory.config.models import AppConfig
-from viral_shorts_factory.domain.assets import AssetSearchRequest, RightsStatus
+from viral_shorts_factory.domain.assets import AssetSearchRequest, MediaType, RightsStatus
 from viral_shorts_factory.providers.base import (
     ProviderAuthError,
     ProviderRateLimitError,
@@ -112,6 +112,44 @@ def test_auth_header_and_query_params() -> None:
     assert captured["params"]["size"] == "medium"
     assert captured["params"]["locale"] == "en-US"
     assert captured["params"]["query"] == "goalkeeper confident"
+
+
+def test_photo_search_normalizes_alt_tags() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/v1/search"
+        return httpx.Response(
+            200,
+            json={
+                "photos": [
+                    {
+                        "id": 555,
+                        "url": "https://www.pexels.com/photo/betta-fish-555/",
+                        "alt": "Betta fish in aquarium",
+                        "photographer": "Photo Tester",
+                        "width": 1080,
+                        "height": 1920,
+                        "src": {
+                            "original": "https://images.pexels.com/photos/555/original.jpeg",
+                            "medium": "https://images.pexels.com/photos/555/medium.jpeg",
+                        },
+                    }
+                ]
+            },
+        )
+
+    provider = _provider(handler)
+    request = AssetSearchRequest(
+        scene_id="scene_001",
+        query="betta fish aquarium",
+        media_type=MediaType.IMAGE,
+        minimum_height=1080,
+    )
+    candidates = run(provider.search(request))
+
+    assert len(candidates) == 1
+    assert candidates[0].media_type == MediaType.IMAGE
+    assert "betta" in candidates[0].tags
+    assert "fish" in candidates[0].tags
 
 
 def test_minimum_height_filtered() -> None:

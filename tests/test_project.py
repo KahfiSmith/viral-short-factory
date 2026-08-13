@@ -26,12 +26,18 @@ FIXED_NOW = datetime(2026, 8, 12, 5, 45, 0, tzinfo=UTC)
 def test_project_id_format() -> None:
     pid = generate_project_id("Kiper Tarkam Merasa Dirinya Neuer", now=FIXED_NOW)
     assert PROJECT_ID_RE.match(pid)
-    assert pid == "kiper-tarkam-merasa-dirinya-neuer"
+    assert re.fullmatch(r"kiper-tarkam-merasa-dirinya-neuer-[0-9a-f]{8}", pid)
+
+
+def test_project_ids_are_unique_for_same_topic() -> None:
+    first = generate_project_id("same topic", now=FIXED_NOW)
+    second = generate_project_id("same topic", now=FIXED_NOW)
+    assert first != second
 
 
 def test_project_id_slug_empty_topic() -> None:
     pid = generate_project_id("  ", now=FIXED_NOW)
-    assert pid == "project"
+    assert re.fullmatch(r"project-[0-9a-f]{8}", pid)
 
 
 def test_workspace_created_outside_repo(config: AppConfig, tmp_path: Path) -> None:

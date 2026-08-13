@@ -33,6 +33,9 @@ def test_plan_queries_one_per_scene(config: AppConfig) -> None:
     assert first.orientation == "portrait"
     assert first.minimum_height == 1080
     assert first.max_results == 8
+    image = requests[1]
+    assert image.media_type.value == "image"
+    assert image.max_results == 4
 
 
 def test_plan_queries_respects_constraints(config: AppConfig) -> None:
