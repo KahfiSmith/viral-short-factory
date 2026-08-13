@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "scenes": [
+    {
+      "scene_id": "scene_001",
+      "order": 1,
+      "purpose": "hook",
+      "target_duration_seconds": 3.0,
+      "spoken_text": "Kiper baru kita katanya gaya mainnya kayak Neuer.",
+      "visual_intent": "amateur football goalkeeper standing confidently",
+      "queries": [
+        "amateur soccer goalkeeper confident",
+        "football goalkeeper standing field"
+      ],
+      "constraints": {
+        "orientation": "portrait_preferred",
+        "min_height": 1080,
+        "min_duration_seconds": 2,
+        "max_duration_seconds": 15
+      }
+    },
+    {
+      "scene_id": "scene_002",
+      "order": 2,
+      "purpose": "escalation",
+      "target_duration_seconds": 5.0,
+      "spoken_text": "Dia langsung keluar dari gawang buat jemput bola.",
+      "visual_intent": "goalkeeper running forward out of goal",
+      "queries": [
+        "soccer goalkeeper running out goal",
+        "football goalkeeper running field"
+      ],
+      "constraints": {
+        "orientation": "portrait_preferred",
+        "min_height": 1080
+      }
+    }
+  ]
+}

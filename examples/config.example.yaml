@@ -1,0 +1,65 @@
+app:
+  project_root: "~/Videos/vsf-projects"
+  asset_library_root: "~/.local/share/viral-shorts-factory/assets"
+  database_path: "~/.local/share/viral-shorts-factory/vsf.sqlite3"
+
+video_use:
+  # Upstream video-use checkout used by this machine (Milestone 0 verified it here).
+  repo_path: "~/Kahfi/Project/Backend/video-use"
+  require_strategy_approval: true
+
+defaults:
+  platform: "youtube_shorts"
+  language: "id-ID"
+  aspect_ratio: "9:16"
+  width: 1080
+  height: 1920
+
+providers:
+  local:
+    enabled: true
+    priority: 10
+
+  pexels:
+    enabled: true
+    priority: 20
+    api_key_env: "PEXELS_API_KEY"
+    per_page: 20
+
+  pixabay:
+    enabled: true
+    priority: 30
+    api_key_env: "PIXABAY_API_KEY"
+    cache_ttl_hours: 24
+    per_page: 20
+
+  youtube_trends:
+    enabled: false
+    api_key_env: "YOUTUBE_API_KEY"
+    region_code: "ID"
+    video_category_id: "17"
+
+downloads:
+  max_candidates_per_scene: 2
+  max_file_size_mb: 250
+  timeout_seconds: 60
+
+ranking:
+  weights:
+    query_match: 0.30
+    orientation: 0.25
+    resolution: 0.15
+    duration_fit: 0.15
+    source_confidence: 0.10
+    duplicate_penalty: 0.05
+
+profiles:
+  football_comedy:
+    min_duration_seconds: 18
+    max_duration_seconds: 35
+    locale: "id-ID"
+
+  facts:
+    min_duration_seconds: 15
+    max_duration_seconds: 45
+    locale: "id-ID"

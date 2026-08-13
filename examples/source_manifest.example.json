@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "project_id": "20260812-kiper-neuer-abc123",
+  "assets": [
+    {
+      "scene_id": "scene_001",
+      "asset_id": "asset_example",
+      "provider": "pexels",
+      "provider_asset_id": "123456",
+      "source_page_url": "https://www.pexels.com/video/example/",
+      "contributor_name": "Example Contributor",
+      "query": "amateur soccer goalkeeper confident",
+      "rights_status": "PROVIDER_LICENSED",
+      "downloaded_at": "2026-08-12T05:50:00+07:00",
+      "local_path": "sources/scene_001_pexels_123456.mp4",
+      "sha256": "REPLACE_WITH_REAL_SHA256"
+    }
+  ]
+}

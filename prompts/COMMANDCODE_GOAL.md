@@ -1,0 +1,1 @@
+/goal Implement ONLY the currently approved milestone according to AGENTS.md and docs/05-IMPLEMENTATION-PLAN.md. Follow the approved plan. Run tests, lint, and type checks before completion. Use the relevant custom agents for specialist review where useful. Provide concrete acceptance evidence and stop before the next milestone. Never modify upstream browser-use/video-use.

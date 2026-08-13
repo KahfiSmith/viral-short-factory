@@ -1,0 +1,1 @@
+/plan Read AGENTS.md and docs/05-IMPLEMENTATION-PLAN.md. Inspect the current repository. Produce an implementation plan for ONLY the next incomplete milestone. Include exact files/modules, tests, commands, dependencies, failure cases, and acceptance evidence. Do not modify browser-use/video-use. Do not implement anything yet.

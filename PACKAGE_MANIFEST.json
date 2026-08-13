@@ -1,0 +1,162 @@
+[
+  {
+    "path": ".commandcode/AGENTS.md",
+    "bytes": 376,
+    "sha256": "6af274bef5f2bc12cfc332a6eb70f2cc07178a0fdcf53ac075ee887998a17227"
+  },
+  {
+    "path": ".commandcode/agents/footage-engineer.md",
+    "bytes": 803,
+    "sha256": "450c51ccc22f3c73f0d37daad700a7e71082a0668691160586915be121aec7b3"
+  },
+  {
+    "path": ".commandcode/agents/qa-auditor.md",
+    "bytes": 715,
+    "sha256": "797db83b65a55a3784965fd3fce9b2e1e4556065a190f29933a95ea708440aec"
+  },
+  {
+    "path": ".commandcode/agents/security-auditor.md",
+    "bytes": 718,
+    "sha256": "3645b9f971c23be99f92277385d6df85265ec73d8abd267bf98c8f86f46bbbc6"
+  },
+  {
+    "path": ".commandcode/agents/video-use-integrator.md",
+    "bytes": 892,
+    "sha256": "5c76d855432b1ec55cdedeb8a35e5f5fa01c332418252cca38036dc53987d9a5"
+  },
+  {
+    "path": ".commandcode/agents/vsf-architect.md",
+    "bytes": 807,
+    "sha256": "2c6c1ed3ba602abf365e848526169ca8a4a4f7f9b9ad5a4a84fda8cd61280c13"
+  },
+  {
+    "path": ".commandcode/skills/footage-finder/SKILL.md",
+    "bytes": 1048,
+    "sha256": "e039abe8395a7e95e72c9c21fb93661846e1584f141c987d6f00a71d1af666b3"
+  },
+  {
+    "path": ".commandcode/skills/viral-shorts-factory/SKILL.md",
+    "bytes": 1836,
+    "sha256": "83377d6cd48e9c4e7a3ee197bcf0e175adf2da209389b9eaf5a45ea05406aecc"
+  },
+  {
+    "path": ".env.example",
+    "bytes": 177,
+    "sha256": "93a5b1ef4721e9a58972db9f4fa4e7b7500f801e544e3f8192ef21c1abcc7dee"
+  },
+  {
+    "path": "AGENTS.md",
+    "bytes": 3395,
+    "sha256": "18126ddfb038b0b83d98c3b0825277c02bc0110b7aa963e673adb80c301967ea"
+  },
+  {
+    "path": "COMMANDCODE-QUICKSTART.md",
+    "bytes": 1094,
+    "sha256": "c334e30242599c1e17da6979d4dd14ca7f61893891549075b609c75128400300"
+  },
+  {
+    "path": "README.md",
+    "bytes": 6235,
+    "sha256": "78c1106db956b2ed7e937ecb8334c0fd9a09b356ca999942e361ff462ee32725"
+  },
+  {
+    "path": "SOURCE_NOTES.md",
+    "bytes": 2866,
+    "sha256": "c09088cc1609fc63f7cb0243525411c3ac1f1e3eed9d67b703f83f5ef1337f74"
+  },
+  {
+    "path": "docs/01-PROJECT-SPEC.md",
+    "bytes": 6709,
+    "sha256": "013a57a8a1e8d8e6200babf3457692f37ba5fd7030f6e8e77d479cbfff62cdda"
+  },
+  {
+    "path": "docs/02-ARCHITECTURE.md",
+    "bytes": 7487,
+    "sha256": "4f386a6f180fe36d1d42ee5be0c71f9b48038795f2661a25cb05aee0225508de"
+  },
+  {
+    "path": "docs/03-DATA-CONTRACTS.md",
+    "bytes": 5013,
+    "sha256": "86ea58adbeb4b624f528488b69156976a29ebb886670d96c27bf5ff75deb6f36"
+  },
+  {
+    "path": "docs/04-PROVIDER-INTEGRATIONS.md",
+    "bytes": 5274,
+    "sha256": "b109bf25d62875f93cd3af2eea9ff7b743400a4acdb8e498a834084a32f6dd4d"
+  },
+  {
+    "path": "docs/05-IMPLEMENTATION-PLAN.md",
+    "bytes": 6306,
+    "sha256": "67101f4804c0e7cac50ab857ebc3e10f709022128f9a27069200d27dd2ceb73f"
+  },
+  {
+    "path": "docs/06-TESTING-ACCEPTANCE.md",
+    "bytes": 2855,
+    "sha256": "c4c80a72a402930308df07fa5fa2eb796dd0fb6211d42a029b6f8569d46efc2c"
+  },
+  {
+    "path": "docs/07-SECURITY-COMPLIANCE.md",
+    "bytes": 3084,
+    "sha256": "a3cf0e7b9a01fa9dfa0cb88c86372707227b13ef3552df825f8ea21f18ec62b8"
+  },
+  {
+    "path": "docs/08-OPERATIONS.md",
+    "bytes": 2497,
+    "sha256": "49d1ad2825ee45b6c9b8d9ae9ca4f385ef1cf44d7ca9e44214405a4ae4bbabc1"
+  },
+  {
+    "path": "docs/09-COMMANDCODE-WORKFLOW.md",
+    "bytes": 4448,
+    "sha256": "9dd045b75bfe8fe2c596c22f4d726a27f07d2cfeee9ed12569bac38aa7072ee6"
+  },
+  {
+    "path": "examples/config.example.yaml",
+    "bytes": 1134,
+    "sha256": "68ec855ffe5ff5e3c7df5c787307be2463f79abe29ce43dd7958709120d04324"
+  },
+  {
+    "path": "examples/project.example.json",
+    "bytes": 362,
+    "sha256": "76c7f5950753c28ee6dc0f6d2ceecff592d52b3d857e073aa9dfd2bf906fd3f2"
+  },
+  {
+    "path": "examples/source_manifest.example.json",
+    "bytes": 606,
+    "sha256": "a529e59fc966e3e8ceccceacb7f7aa5c589ed2017cb0d0ea48b791ccad41f472"
+  },
+  {
+    "path": "examples/storyboard.example.json",
+    "bytes": 1107,
+    "sha256": "d39fbec1f73126eba47468ddbd4ca33eff5829defccf5eaed659ea56809396fc"
+  },
+  {
+    "path": "prompts/BUILD_PROJECT.md",
+    "bytes": 1274,
+    "sha256": "6b99b75c8857c48b0411e31d4d609270b89c9a54be7e339b93942165a4f261aa"
+  },
+  {
+    "path": "prompts/COMMANDCODE_GOAL.md",
+    "bytes": 376,
+    "sha256": "543344ed5bfef25b5224edb1fcb29e28ce34bfea03815693dc7c6ddf33492e6a"
+  },
+  {
+    "path": "prompts/COMMANDCODE_PLAN.md",
+    "bytes": 328,
+    "sha256": "3173ae36aa28bb4aaf4bb0222eb5c330c61d5a5207be1c70309471ae2f3a54d0"
+  },
+  {
+    "path": "prompts/COMMANDCODE_START.md",
+    "bytes": 587,
+    "sha256": "c1e1674c5e5818777dcf985c26ef0082b5b5459d2e80b4e7ee5b94a941f7321c"
+  },
+  {
+    "path": "prompts/PHASE_1_MVP.md",
+    "bytes": 830,
+    "sha256": "a4d574036dfaf7739730fa4fec211d0a9032be456a69a070ef52b26650fbe464"
+  },
+  {
+    "path": "prompts/REVIEW_PROJECT.md",
+    "bytes": 1111,
+    "sha256": "c922e4638b647ed59bf53ddacfe143241a2ae9797a2ded30010b5e5d4f9ab896"
+  }
+]
