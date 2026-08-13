@@ -7,30 +7,16 @@ script fixture when the agent has not written one yet.
 
 from __future__ import annotations
 
-import re
-
 from viral_shorts_factory.config.models import ProfileConfig
 from viral_shorts_factory.domain.script import Beat, BeatType, Script
 from viral_shorts_factory.domain.storyboard import Scene, SceneConstraints, Storyboard
+from viral_shorts_factory.domain.topics import normalize_topic
 from viral_shorts_factory.profiles.base import register_profile
 
 
 def _extract_english_topic(topic: str) -> str:
-    """Extract stock-friendly English search terms from topic string."""
-    t = topic.lower()
-    if "cupang" in t or re.search(r"\b(?:beta|betta)(?:\s+fish)?\b", t):
-        return "betta fish"
-    if "ikan badut" in t or re.search(r"\bclown\s*fish\b", t) or "nemo" in t:
-        return "clownfish"
-    if re.search(r"\bsinga\s+laut\b", t) or re.search(r"\bsea\s+lion\b", t):
-        return "sea lion"
-    if re.search(r"\bsinga\b", t) or re.search(r"\blions?\b", t):
-        return "lion"
-    if "kucing" in t or re.search(r"\bcat\b", t):
-        return "cute cat"
-    if "anjing" in t or re.search(r"\bdog\b", t):
-        return "dog pet"
-    return topic
+    """Extract stock-friendly English search terms from the shared taxonomy."""
+    return normalize_topic(topic)
 
 
 def generate_queries(purpose: BeatType, visual_intent: str, topic_term: str) -> list[str]:

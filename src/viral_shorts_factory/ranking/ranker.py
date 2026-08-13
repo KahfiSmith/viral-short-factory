@@ -53,9 +53,22 @@ def select_best_candidates(
     for scene in storyboard.scenes:
         cands = candidates_by_scene.get(scene.scene_id, [])
         ranked = rank_candidates(cands, scene, config, already_used_ids=already_used)
+
+        # Prefer an unused provider candidate when alternatives exist. If all
+        # candidates are already used, retain the ranked list so safe reuse is
+        # still possible when the providers have no new footage.
+        unused = [
+            item
+            for item in ranked
+            if item[0].candidate_id not in already_used
+            and item[0].provider_asset_id not in already_used
+        ]
+        if unused:
+            used = [item for item in ranked if item not in unused]
+            ranked = unused + used
         results[scene.scene_id] = ranked
 
-        # Record top choice into already_used to penalize reuse in later scenes
+        # Record the preferred choice into already_used for later scenes.
         if ranked:
             top_cand = ranked[0][0]
             already_used.add(top_cand.candidate_id)

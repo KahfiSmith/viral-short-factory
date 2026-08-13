@@ -150,7 +150,7 @@ class PexelsProvider:
             "locale": request.locale,
             "per_page": str(request.max_results or self.per_page),
         }
-        endpoint = "/v1/search" if request.media_type == MediaType.IMAGE else "/videos/search"
+        endpoint = "/search" if request.media_type == MediaType.IMAGE else "/videos/search"
         response = await self._request_with_retry(endpoint, params)
         try:
             data = response.json()
@@ -183,6 +183,11 @@ class PexelsProvider:
                         ],
                         width=photo.get("width"),
                         height=photo.get("height"),
+                        tags=[
+                            token
+                            for token in str(photo.get("alt") or "").lower().split()
+                            if token.isalnum()
+                        ],
                         contributor_name=photo.get("photographer"),
                         query=request.query,
                         rights_status=RightsStatus.PROVIDER_LICENSED,

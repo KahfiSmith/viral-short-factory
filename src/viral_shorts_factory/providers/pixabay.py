@@ -1,14 +1,14 @@
 """Pixabay footage provider (official API, docs/04-PROVIDER-INTEGRATIONS §3).
 
 Adapter responsibilities:
-- GET https://pixabay.com/api/videos/ with the key as a query param;
+- GET https://pixabay.com/api/ for images and https://pixabay.com/api/videos/ for videos;
 - mandatory 24h cache of successful responses via CacheRepository;
 - timeout + bounded retry (429/5xx/transport), permanent on auth errors;
 - parse raw response into private models (never exposed to domain code);
 - filter to mp4 variants, sort by height desc, drop below minimum_height;
 - emit normalized AssetCandidate objects.
 
-The cache key is sha256("pixabay|videos|<sorted query params>") and excludes the
+The cache key is sha256("pixabay|<sorted query params>") and excludes the
 API key itself. Only HTTP 200 responses are cached, so corrupt/error responses
 are never stored.
 """
@@ -51,14 +51,14 @@ if TYPE_CHECKING:
         FootageProvider,
     )
 
-PIXABAY_BASE_URL = "https://pixabay.com/api/videos/"
+PIXABAY_BASE_URL = "https://pixabay.com/api"
 
 
 # ---- Private Pixabay response models (never leave this module) --------------
 
 
 class _PixabayVideoFile(BaseModel):
-    type: str
+    type: str = "video/mp4"
     url: str
     width: int | None = None
     height: int | None = None
@@ -69,7 +69,7 @@ class _PixabayVideo(BaseModel):
     id: int
     pageURL: str
     duration: int
-    image: str
+    image: str | None = None
     videos: dict[str, _PixabayVideoFile]
     user: str = ""
     userImageURL: str = ""
@@ -136,19 +136,18 @@ class PixabayProvider:
             "lang": request.locale,
             "safesearch": "true",
             "order": "popular",
-            "category": "sports",
             "per_page": str(request.max_results or self.per_page),
         }
         if not is_image:
             params["video_type"] = "film"
 
-        cache_key = self._cache_key(params)
+        endpoint = "/" if is_image else "/videos/"
+        cache_key = self._cache_key(params, endpoint)
 
         cached = self._cache.get(cache_key, now=datetime.now(UTC))
         if cached is not None:
             data = json.loads(cached.response_json)
         else:
-            endpoint = "" if is_image else "/videos/"
             response = await self._request_with_retry(endpoint, params)
             try:
                 data = response.json()
@@ -186,6 +185,11 @@ class PixabayProvider:
                         ],
                         width=hit.get("imageWidth"),
                         height=hit.get("imageHeight"),
+                        tags=[
+                            token.strip().lower()
+                            for token in str(hit.get("tags") or "").split(",")
+                            if token.strip()
+                        ],
                         contributor_name=hit.get("user"),
                         query=request.query,
                         rights_status=RightsStatus.PROVIDER_LICENSED,
@@ -290,14 +294,10 @@ class PixabayProvider:
         return candidates
 
     @staticmethod
-    def _cache_key(params: dict[str, str]) -> str:
-        """sha256("pixabay|videos|q=...&category=...") with sorted params.
-
-        Excludes the API key; ordering-independent so equivalent requests share
-        a key.
-        """
+    def _cache_key(params: dict[str, str], endpoint: str = "/videos/") -> str:
+        """Build an endpoint-aware key excluding the API key itself."""
         normalized = "&".join(f"{k}={params[k]}" for k in sorted(params))
-        canonical = f"pixabay|videos|{normalized}"
+        canonical = f"pixabay|{endpoint}|{normalized}"
         return hashlib.sha256(canonical.encode()).hexdigest()
 
     @staticmethod

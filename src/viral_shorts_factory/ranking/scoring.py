@@ -2,11 +2,42 @@
 
 from __future__ import annotations
 
+import re
+from urllib.parse import unquote, urlparse
+
 from pydantic import BaseModel, Field
 
 from viral_shorts_factory.config.models import RankingWeights
-from viral_shorts_factory.domain.assets import AssetCandidate, RightsStatus
+from viral_shorts_factory.domain.assets import AssetCandidate, MediaType, RightsStatus
 from viral_shorts_factory.domain.storyboard import Scene
+from viral_shorts_factory.domain.topics import matches_species, required_species
+
+
+def _metadata_tokens(candidate: AssetCandidate) -> set[str]:
+    """Extract searchable asset metadata, excluding the request query itself."""
+    source_url = unquote(urlparse(candidate.source_page_url or "").path)
+    text = " ".join([*candidate.tags, source_url])
+    return set(re.findall(r"[a-z0-9]+", text.lower()))
+
+
+def _required_species(scene: Scene) -> str | None:
+    """Return the species a scene explicitly asks for, if any."""
+    return required_species(" ".join(scene.queries))
+
+
+def _has_species_signal(tokens: set[str], species: str) -> bool:
+    return matches_species(tokens, species)
+
+
+def _has_species_video_context_signal(tokens: set[str], species: str) -> bool:
+    """Allow sparse provider metadata only when its habitat is species-specific."""
+    if species == "betta":
+        return "aquarium" in tokens and not bool(
+            tokens & {"coral", "corals", "ocean", "sea", "reef", "shark", "whale"}
+        )
+    if species == "clownfish":
+        return "anemone" in tokens and not bool(tokens & {"betta", "cupang", "shark", "whale"})
+    return False
 
 
 class ScoreComponents(BaseModel):
@@ -60,7 +91,35 @@ def score_candidate(
             components=components,
         )
 
-    # 1. Query match (simplest token overlap ratio)
+    metadata_tokens = _metadata_tokens(candidate)
+    required_species = _required_species(scene)
+    has_video_fallback = (
+        required_species is not None
+        and candidate.media_type == MediaType.VIDEO
+        and candidate.provider in ("pexels", "pixabay")
+        and _has_species_video_context_signal(metadata_tokens, required_species)
+    )
+    if (
+        required_species is not None
+        and not _has_species_signal(metadata_tokens, required_species)
+        and not has_video_fallback
+    ):
+        components = ScoreComponents(
+            query_match=0.0,
+            orientation=0.0,
+            resolution=0.0,
+            duration_fit=0.0,
+            source_confidence=0.0,
+            duplicate_penalty=1.0 if candidate.candidate_id in already_used else 0.0,
+        )
+        return CandidateScore(
+            candidate_id=candidate.candidate_id,
+            scene_id=scene.scene_id,
+            total=0.0,
+            components=components,
+        )
+
+    # 1. Query match (asset metadata only; never the echoed request query)
     q_match = _score_query_match(candidate, scene)
 
     # 2. Orientation fit
@@ -109,16 +168,25 @@ def score_candidate(
 
 
 def _score_query_match(candidate: AssetCandidate, scene: Scene) -> float:
-    cand_tokens = set(candidate.query.lower().split())
-    for tag in candidate.tags:
-        cand_tokens.update(tag.lower().split())
+    # candidate.query is the request sent to the provider, not asset metadata;
+    # using it would give every result a perfect match score.
+    metadata_tokens = _metadata_tokens(candidate)
+    required_species = _required_species(scene)
+    if required_species is not None and not _has_species_signal(metadata_tokens, required_species):
+        if (
+            candidate.media_type == MediaType.VIDEO
+            and candidate.provider in ("pexels", "pixabay")
+            and _has_species_video_context_signal(metadata_tokens, required_species)
+        ):
+            return 0.25
+        return 0.0
 
     best_match = 0.0
     for scene_q in scene.queries:
         scene_tokens = set(scene_q.lower().split())
         if not scene_tokens:
             continue
-        overlap = len(cand_tokens & scene_tokens)
+        overlap = len(metadata_tokens & scene_tokens)
         ratio = overlap / len(scene_tokens)
         if ratio > best_match:
             best_match = ratio
