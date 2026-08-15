@@ -1,5 +1,5 @@
 app:
-  project_root: "~/Videos/vsf-projects"
+  project_root: "~/Videos/Video Editor/Projects/vsf"
   asset_library_root: "~/.local/share/viral-shorts-factory/assets"
   database_path: "~/.local/share/viral-shorts-factory/vsf.sqlite3"
 

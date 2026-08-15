@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 class AppPaths(BaseModel):
     """Filesystem locations used by the application."""
 
-    project_root: Path = Path("~/Videos/vsf-projects").expanduser()
+    project_root: Path = Path("~/Videos/Video Editor/Projects/vsf").expanduser()
     asset_library_root: Path = Path("~/.local/share/viral-shorts-factory/assets").expanduser()
     database_path: Path = Path("~/.local/share/viral-shorts-factory/vsf.sqlite3").expanduser()
 
