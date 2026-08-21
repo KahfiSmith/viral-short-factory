@@ -15,6 +15,7 @@ import typer
 # vsf plan can resolve builders by name.
 import viral_shorts_factory.profiles.facts  # noqa: F401
 import viral_shorts_factory.profiles.football_comedy  # noqa: F401
+import viral_shorts_factory.profiles.space_mysteries  # noqa: F401
 from viral_shorts_factory.cli.assets import assets_app
 from viral_shorts_factory.config.loader import ConfigError, load_config
 from viral_shorts_factory.config.models import AppConfig

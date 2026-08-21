@@ -63,3 +63,8 @@ profiles:
     min_duration_seconds: 15
     max_duration_seconds: 45
     locale: "id-ID"
+
+  space_mysteries:
+    min_duration_seconds: 15
+    max_duration_seconds: 45
+    locale: "id-ID"
