@@ -179,6 +179,22 @@ TOPIC_ALIASES: dict[str, tuple[str, ...]] = {
         "black mambas",
         "mamba hitam",
     ),
+    "king cobra": (
+        "king cobra",
+        "king cobras",
+        "cobra",
+        "cobras",
+        "ular kobra",
+        "kobra",
+        "ular sendok",
+    ),
+    "rhinoceros": (
+        "badak",
+        "rhino",
+        "rhinos",
+        "rhinoceros",
+        "rhinoceroses",
+    ),
     "inland taipan": (
         "inland taipan",
         "inland taipans",
@@ -189,6 +205,35 @@ TOPIC_ALIASES: dict[str, tuple[str, ...]] = {
         "harpy eagle",
         "harpy eagles",
         "elang harpy",
+    ),
+    "wolf": (
+        "serigala",
+        "wolf",
+        "wolves",
+        "gray wolf",
+        "grey wolf",
+    ),
+    "cheetah": (
+        "cheetah",
+        "cheetahs",
+        "citah",
+    ),
+    "leopard": (
+        "macan tutul",
+        "leopard",
+        "leopards",
+        "black panther",
+        "panther",
+        "panthers",
+        "macan kumbang",
+    ),
+    "cougar": (
+        "cougar",
+        "cougars",
+        "puma",
+        "pumas",
+        "mountain lion",
+        "singa gunung",
     ),
 }
 
@@ -209,6 +254,8 @@ _SPECIES_TOPIC_KEYS = {
     "cat": "cute cat",
     "dog": "dog pet",
     "betta": "betta fish",
+    "komodo": "komodo dragon",
+    "rhino": "rhinoceros",
 }
 
 SPECIES_ALIASES: dict[str, tuple[str, ...]] = {

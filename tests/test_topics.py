@@ -39,8 +39,18 @@ def test_specific_phrases_beat_broader_category_aliases() -> None:
     assert normalize_topic("hiu banteng") == "bull shark"
     assert normalize_topic("ubur-ubur kotak") == "box jellyfish"
     assert normalize_topic("black mamba") == "black mamba"
+    assert normalize_topic("king cobra") == "king cobra"
+    assert normalize_topic("ular kobra") == "king cobra"
+    assert normalize_topic("badak") == "rhinoceros"
+    assert normalize_topic("rhino") == "rhinoceros"
+    assert normalize_topic("komodo") == "komodo dragon"
     assert normalize_topic("inland taipan") == "inland taipan"
     assert normalize_topic("elang harpy") == "harpy eagle"
+    assert normalize_topic("serigala") == "wolf"
+    assert normalize_topic("citah") == "cheetah"
+    assert normalize_topic("macan tutul") == "leopard"
+    assert normalize_topic("singa gunung") == "cougar"
+    assert normalize_topic("puma") == "cougar"
 
 
 def test_unknown_topic_is_preserved() -> None:
