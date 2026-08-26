@@ -249,6 +249,6 @@ def _score_duration(candidate: AssetCandidate, scene: Scene) -> float:
 def _score_source_confidence(candidate: AssetCandidate) -> float:
     if candidate.provider == "local":
         return 1.0
-    if candidate.provider in ("pexels", "pixabay"):
+    if candidate.provider in ("pexels", "pixabay", "unsplash"):
         return 0.9 if candidate.rights_status == RightsStatus.PROVIDER_LICENSED else 0.7
     return 0.5

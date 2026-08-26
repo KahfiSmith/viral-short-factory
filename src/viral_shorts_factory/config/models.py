@@ -33,7 +33,7 @@ class DefaultsConfig(BaseModel):
 
 
 class ProviderConfig(BaseModel):
-    """A single footage provider's enabled state, priority, and secret reference.
+    """A single footage/signal provider's enabled state, priority, and configuration.
 
     `api_key_env` holds the name of the environment variable that contains the
     secret — never the secret itself.
@@ -44,6 +44,10 @@ class ProviderConfig(BaseModel):
     api_key_env: str | None = None
     per_page: int = 20
     cache_ttl_hours: int | None = None
+    user_agent: str | None = None
+    language: str | None = None
+    region_code: str | None = None
+    video_category_id: str | None = None
 
 
 class DownloadLimits(BaseModel):

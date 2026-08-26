@@ -25,6 +25,22 @@ def test_specific_phrases_beat_broader_category_aliases() -> None:
     assert normalize_topic("ikan cupang") == "betta fish"
     assert normalize_topic("ikan badut") == "clownfish"
     assert normalize_topic("singa laut") == "sea lion"
+    assert normalize_topic("orca") == "orca"
+    assert normalize_topic("white shark") == "great white shark"
+    assert normalize_topic("beruang grizzly") == "grizzly bear"
+    assert normalize_topic("jaguar") == "jaguar"
+    assert normalize_topic("anaconda") == "anaconda"
+    assert normalize_topic("luwak madu") == "honey badger"
+    assert normalize_topic("beruang kutub") == "polar bear"
+    assert normalize_topic("kuda nil") == "hippopotamus"
+    assert normalize_topic("hyena") == "spotted hyena"
+    assert normalize_topic("wolverine") == "wolverine"
+    assert normalize_topic("buaya muara") == "saltwater crocodile"
+    assert normalize_topic("hiu banteng") == "bull shark"
+    assert normalize_topic("ubur-ubur kotak") == "box jellyfish"
+    assert normalize_topic("black mamba") == "black mamba"
+    assert normalize_topic("inland taipan") == "inland taipan"
+    assert normalize_topic("elang harpy") == "harpy eagle"
 
 
 def test_unknown_topic_is_preserved() -> None:

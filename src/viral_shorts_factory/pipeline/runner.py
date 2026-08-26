@@ -32,6 +32,7 @@ from viral_shorts_factory.pipeline.planner import plan_queries
 from viral_shorts_factory.providers.base import FootageProvider, ProviderError
 from viral_shorts_factory.providers.pexels import PexelsProvider
 from viral_shorts_factory.providers.pixabay import PixabayProvider
+from viral_shorts_factory.providers.unsplash import UnsplashProvider
 from viral_shorts_factory.ranking.ranker import select_best_candidates
 from viral_shorts_factory.ranking.scoring import CandidateScore
 
@@ -100,7 +101,7 @@ async def run_pipeline(
                 )
 
             provider_configs = []
-            for name in ("pexels", "pixabay"):
+            for name in ("pexels", "pixabay", "unsplash"):
                 provider_cfg = config.get_provider(name)
                 if provider_cfg is not None:
                     provider_configs.append(name)
@@ -114,12 +115,20 @@ async def run_pipeline(
                         except Exception as exc:  # noqa: BLE001 - key/config issues are non-fatal
                             _log.warning("pexels provider unavailable: %s", exc)
                             continue
-                    else:
+                    elif name == "pixabay":
                         try:
                             provider = PixabayProvider.from_config(config, conn)
                         except Exception as exc:  # noqa: BLE001
                             _log.warning("pixabay provider unavailable: %s", exc)
                             continue
+                    elif name == "unsplash":
+                        try:
+                            provider = UnsplashProvider.from_config(config)
+                        except Exception as exc:  # noqa: BLE001
+                            _log.warning("unsplash provider unavailable: %s", exc)
+                            continue
+                    else:
+                        continue
                     remote = await _search_provider(provider, requests)
                     for scene_id, cands in remote.items():
                         by_scene.setdefault(scene_id, []).extend(cands)

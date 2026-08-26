@@ -33,6 +33,17 @@ providers:
     cache_ttl_hours: 24
     per_page: 20
 
+  unsplash:
+    enabled: true
+    priority: 40
+    api_key_env: "UNSPLASH_ACCESS_KEY"
+    per_page: 20
+
+  wikipedia:
+    enabled: true
+    user_agent: "ViralShortsFactory/1.0 (https://github.com/viral-shorts-factory; contact@example.com)"
+    language: "id"
+
   youtube_trends:
     enabled: false
     api_key_env: "YOUTUBE_API_KEY"

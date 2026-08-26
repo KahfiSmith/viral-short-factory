@@ -112,6 +112,84 @@ TOPIC_ALIASES: dict[str, tuple[str, ...]] = {
     "okapi": ("okapi", "okapis"),
     "wombat": ("wombat", "wombats"),
     "tarsier": ("tarsius", "tarsier", "tarsiers"),
+    "orca": ("orca", "orcas", "killer whale", "killer whales", "paus pembunuh"),
+    "great white shark": (
+        "great white shark",
+        "great white sharks",
+        "white shark",
+        "white sharks",
+        "hiu putih besar",
+        "hiu putih",
+    ),
+    "grizzly bear": (
+        "grizzly bear",
+        "grizzly bears",
+        "beruang grizzly",
+        "grizzly",
+    ),
+    "jaguar": ("jaguar", "jaguars"),
+    "anaconda": ("anaconda", "anacondas", "ular anaconda"),
+    "honey badger": (
+        "honey badger",
+        "honey badgers",
+        "ratel",
+        "luwak madu",
+    ),
+    "polar bear": (
+        "polar bear",
+        "polar bears",
+        "beruang kutub",
+    ),
+    "hippopotamus": (
+        "hippopotamus",
+        "hippo",
+        "hippos",
+        "kuda nil",
+    ),
+    "spotted hyena": (
+        "spotted hyena",
+        "spotted hyenas",
+        "hyena",
+        "hyenas",
+        "haiena",
+    ),
+    "wolverine": (
+        "wolverine",
+        "wolverines",
+    ),
+    "saltwater crocodile": (
+        "saltwater crocodile",
+        "saltwater crocodiles",
+        "buaya muara",
+        "buaya air asin",
+    ),
+    "bull shark": (
+        "bull shark",
+        "bull sharks",
+        "hiu banteng",
+    ),
+    "box jellyfish": (
+        "box jellyfish",
+        "sea wasp",
+        "ubur-ubur kotak",
+        "ubur ubur kotak",
+    ),
+    "black mamba": (
+        "black mamba",
+        "black mambas",
+        "mamba hitam",
+    ),
+    "inland taipan": (
+        "inland taipan",
+        "inland taipans",
+        "taipan pedalaman",
+        "taipan",
+    ),
+    "harpy eagle": (
+        "harpy eagle",
+        "harpy eagles",
+        "elang harpy",
+    ),
 }
 
 _CATEGORY_KEYS = {
