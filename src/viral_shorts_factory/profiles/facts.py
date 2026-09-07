@@ -39,6 +39,18 @@ def generate_queries(purpose: BeatType, visual_intent: str, topic_term: str) -> 
             "lion pride savanna close up",
             "lion walking grassland wildlife video",
         ]
+    if topic_term in ("human anatomy", "skeleton", "human"):
+        return [
+            visual_intent,
+            "human skeleton 3d medical animation",
+            "human anatomy bone structure",
+        ]
+    if topic_term == "primate":
+        return [
+            visual_intent,
+            "chimpanzee primate close up",
+            "monkey primate in nature",
+        ]
 
     suffix_map = {
         BeatType.HOOK.value: ["close up natural habitat", "wildlife macro"],
@@ -72,6 +84,12 @@ def build_storyboard_from_script(
             visual = "clownfish sea anemone close up video"
         elif topic_term == "lion":
             visual = "lion close up savanna natural habitat video"
+        elif topic_term in ("human anatomy", "skeleton"):
+            visual = "human skeleton anatomy 3d close up video"
+        elif topic_term == "human":
+            visual = "human body anatomy medical close up video"
+        elif topic_term == "primate":
+            visual = "chimpanzee primate close up wildlife video"
         else:
             visual = f"{topic_term} close up natural habitat video"
         scenes.append(
