@@ -33,6 +33,7 @@ from viral_shorts_factory.providers.base import FootageProvider, ProviderError
 from viral_shorts_factory.providers.pexels import PexelsProvider
 from viral_shorts_factory.providers.pixabay import PixabayProvider
 from viral_shorts_factory.providers.unsplash import UnsplashProvider
+from viral_shorts_factory.providers.wikimedia_commons import WikimediaCommonsProvider
 from viral_shorts_factory.ranking.ranker import select_best_candidates
 from viral_shorts_factory.ranking.scoring import CandidateScore
 
@@ -101,7 +102,7 @@ async def run_pipeline(
                 )
 
             provider_configs = []
-            for name in ("pexels", "pixabay", "unsplash"):
+            for name in ("pexels", "pixabay", "unsplash", "wikimedia_commons"):
                 provider_cfg = config.get_provider(name)
                 if provider_cfg is not None:
                     provider_configs.append(name)
@@ -126,6 +127,12 @@ async def run_pipeline(
                             provider = UnsplashProvider.from_config(config)
                         except Exception as exc:  # noqa: BLE001
                             _log.warning("unsplash provider unavailable: %s", exc)
+                            continue
+                    elif name == "wikimedia_commons":
+                        try:
+                            provider = WikimediaCommonsProvider.from_config(config)
+                        except Exception as exc:  # noqa: BLE001
+                            _log.warning("wikimedia_commons provider unavailable: %s", exc)
                             continue
                     else:
                         continue

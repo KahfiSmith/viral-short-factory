@@ -18,6 +18,10 @@ from viral_shorts_factory.domain.assets import AssetCandidate, MediaType, Rights
 
 SCHEMA_VERSION = "1.0"
 _IMAGE_CODECS = frozenset({"bmp", "gif", "jpeg2000", "jpegls", "mjpeg", "png", "tiff", "webp"})
+DEFAULT_DOWNLOAD_USER_AGENT = (
+    "ViralShortsFactory/1.0 (https://github.com/KahfiSmith/viral-short-factory; "
+    "kahfismith@users.noreply.github.com)"
+)
 
 
 class DownloadError(Exception):
@@ -109,7 +113,10 @@ class Downloader:
         max_bytes = self.limits.max_file_size_mb * 1024 * 1024
 
         close_client = self._client is None
-        client = self._client or httpx.Client(timeout=float(self.limits.timeout_seconds))
+        client = self._client or httpx.Client(
+            timeout=float(self.limits.timeout_seconds),
+            headers={"User-Agent": DEFAULT_DOWNLOAD_USER_AGENT},
+        )
 
         try:
             with client.stream("GET", url, follow_redirects=True) as response:

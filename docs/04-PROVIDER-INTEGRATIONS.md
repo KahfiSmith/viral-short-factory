@@ -250,6 +250,12 @@ providers:
     priority: 30
     api_key_env: PIXABAY_API_KEY
     cache_ttl_hours: 24
+
+  wikimedia_commons:
+    enabled: true
+    priority: 45
+    per_page: 20
+    user_agent: "ViralShortsFactory/1.0"
 ```
 
 Lower number = earlier search priority, or choose the opposite convention once and document it.
