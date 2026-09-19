@@ -261,6 +261,12 @@ providers:
     priority: 45
     per_page: 20
     user_agent: "ViralShortsFactory/1.0"
+
+  openverse:
+    enabled: true
+    priority: 50
+    per_page: 20
+    user_agent: "ViralShortsFactory/1.0"
 ```
 
 Lower number = earlier search priority, or choose the opposite convention once and document it.

@@ -31,6 +31,7 @@ from viral_shorts_factory.pipeline.context import PipelineContext
 from viral_shorts_factory.pipeline.planner import plan_queries
 from viral_shorts_factory.providers.base import FootageProvider, ProviderError
 from viral_shorts_factory.providers.nasa import NasaProvider
+from viral_shorts_factory.providers.openverse import OpenverseProvider
 from viral_shorts_factory.providers.pexels import PexelsProvider
 from viral_shorts_factory.providers.pixabay import PixabayProvider
 from viral_shorts_factory.providers.unsplash import UnsplashProvider
@@ -103,7 +104,7 @@ async def run_pipeline(
                 )
 
             provider_configs = []
-            for name in ("pexels", "pixabay", "unsplash", "wikimedia_commons", "nasa"):
+            for name in ("pexels", "pixabay", "unsplash", "wikimedia_commons", "nasa", "openverse"):
                 provider_cfg = config.get_provider(name)
                 if provider_cfg is not None:
                     provider_configs.append(name)
@@ -140,6 +141,12 @@ async def run_pipeline(
                             provider = NasaProvider.from_config(config)
                         except Exception as exc:  # noqa: BLE001
                             _log.warning("nasa provider unavailable: %s", exc)
+                            continue
+                    elif name == "openverse":
+                        try:
+                            provider = OpenverseProvider.from_config(config)
+                        except Exception as exc:  # noqa: BLE001
+                            _log.warning("openverse provider unavailable: %s", exc)
                             continue
                     else:
                         continue
