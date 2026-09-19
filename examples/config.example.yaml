@@ -45,6 +45,12 @@ providers:
     per_page: 20
     user_agent: "ViralShortsFactory/1.0 (https://github.com/KahfiSmith/viral-short-factory; kahfismith@users.noreply.github.com)"
 
+  nasa:
+    enabled: true
+    priority: 25
+    per_page: 20
+    user_agent: "ViralShortsFactory/1.0 (https://github.com/KahfiSmith/viral-short-factory; kahfismith@users.noreply.github.com)"
+
   wikipedia:
     enabled: true
     user_agent: "ViralShortsFactory/1.0 (https://github.com/viral-shorts-factory; contact@example.com)"

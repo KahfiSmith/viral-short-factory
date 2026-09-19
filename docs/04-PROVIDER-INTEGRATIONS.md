@@ -245,6 +245,11 @@ providers:
     priority: 20
     api_key_env: PEXELS_API_KEY
 
+  nasa:
+    enabled: true
+    priority: 25
+    per_page: 20
+
   pixabay:
     enabled: true
     priority: 30
